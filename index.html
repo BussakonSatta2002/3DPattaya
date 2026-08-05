@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Splat with 3D Annotation</title>
+    <style>
+      body { margin: 0; overflow: hidden; background-color: #000; font-family: sans-serif; }
+
+      /* ==========================================
+         สไตล์สำหรับปุ่มสไลด์เปิด-ปิด (Toggle Switch)
+         ========================================== */
+      .switch {
+        position: relative;
+        display: inline-block;
+        width: 50px;
+        height: 24px;
+        margin-right: 12px;
+      }
+      .switch input { 
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #555;
+        transition: .3s;
+        border-radius: 24px;
+      }
+      .slider:before {
+        position: absolute;
+        content: "";
+        height: 18px;
+        width: 18px;
+        left: 3px;
+        bottom: 3px;
+        background-color: white;
+        transition: .3s;
+        border-radius: 50%;
+      }
+      input:checked + .slider {
+        background-color: #00ff00; /* สีเขียวตอนเปิด */
+      }
+      input:checked + .slider:before {
+        transform: translateX(26px);
+      }
+
+
+
+
+
+
+
+
+      /* ==========================================
+         ตั้งค่าสไตล์ของป้าย Annotation 
+         ========================================== */
+      .annotation-marker {
+        position: absolute; 
+        top: 0; 
+        left: 0; 
+        pointer-events: none; 
+        display: none; 
+        z-index: 50;
+      }
+      /* โครงสร้างแนวตั้ง */
+      .anno-container { 
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+        margin-bottom: -6px; 
+      }
+      /* กล่องข้อความ */
+      .anno-box { 
+        background-color: #111111; 
+        color: #ffffff; 
+        padding: 10px 16px; 
+        border-radius: 8px; 
+        white-space: nowrap; 
+        font-family: sans-serif; 
+        font-size: 14px; 
+        font-weight: bold; 
+        border: 1px solid rgba(255,255,255,0.2); 
+        box-shadow: 0px 4px 12px rgba(0,0,0,0.6); 
+      }
+      /* เส้นชี้ (ปรับเป็นสีดำตามที่คุณต้องการ) */
+      .anno-line { 
+        width: 2px; 
+        height: 40px; 
+        background-color: #111111; 
+        box-shadow: 0px 0px 4px rgba(0,0,0,0.5); 
+      }
+      /* จุดปักหมุด (ปรับเป็น 5px และสีดำตามที่คุณต้องการ) */
+      .anno-dot { 
+        width: 5px; 
+        height: 5px; 
+        background-color: #111111; 
+        border-radius: 50%; 
+        border: 3px solid #111111; 
+        margin-top: -6px; 
+        box-shadow: 0px 2px 4px rgba(0,0,0,0.5); 
+      }
+    </style>
+  </head>
+  <body>
+    
+    <!-- ==========================================
+         แผงสวิตช์ เปิด/ปิด เมนูต่างๆ (จัดให้อยู่มุมขวาบน)
+         ========================================== -->
+    <div style="position: absolute; top: 20px; right: 20px; background: rgba(0,0,0,0.7); color: white; padding: 15px; border-radius: 8px; z-index: 100; display: flex; flex-direction: column; gap: 12px; border: 1px solid #333;">
+      
+      <!-- สวิตช์เปิด-ปิด Collision -->
+      <div style="display: flex; align-items: center;">
+        <label class="switch">
+          <input type="checkbox" id="toggle-collision" checked>
+          <span class="slider"></span>
+        </label>
+        <span style="font-size: 15px; font-weight: bold;">แสดง Collision Mesh</span>
+      </div>
+
+      <!-- สวิตช์เปิด-ปิด Helper Box และ Console -->
+      <div style="display: flex; align-items: center;">
+        <label class="switch">
+          <input type="checkbox" id="toggle-helper" checked>
+          <span class="slider"></span>
+        </label>
+        <span style="font-size: 15px; font-weight: bold;">สลับมุมมอง (Orbit / FPS)</span>
+      </div>
+
+    </div>
+
+    <!-- ==========================================
+         แผงควบคุมกล่องเล็งเป้า (Helper Box) 
+         (ย้ายลงมาที่ top: 120px เพื่อไม่ให้ทับกับสวิตช์ด้านบน)
+         ========================================== -->
+    <div id="control-panel" style="position: absolute; top: 120px; right: 20px; background: rgba(0,0,0,0.8); color: white; padding: 15px; border-radius: 8px; z-index: 100; font-family: sans-serif;">
+        <h3 style="margin-top: 0; color: #ff5555;">🎯 กล่องเล็งเป้า</h3>
+        
+        <!-- ควบคุมขนาดกล่อง -->
+        <label>ขนาดกล่อง:</label>
+        <input type="number" id="num-size" value="0.2" step="0.2" style="width: 70px;">
+        <input type="range" id="slider-size" min="0.1" max="20" step="0.1" value="2" style="width: 120px;"><br><hr style="border-color: #333;">
+
+        <!-- แกน X -->
+        <label>แกน X (ซ้าย/ขวา):</label>
+        <input type="number" id="num-x" value="0" step="0.1" style="width: 70px;">
+        <input type="range" id="slider-x" min="-50" max="50" step="0.1" value="0" style="width: 120px;"><br><br>
+
+        <!-- แกน Y -->
+        <label>แกน Y (บน/ล่าง):</label>
+        <input type="number" id="num-y" value="0" step="0.1" style="width: 70px;">
+        <input type="range" id="slider-y" min="-50" max="50" step="0.1" value="0" style="width: 120px;"><br><br>
+
+        <!-- แกน Z -->
+        <label>แกน Z (หน้า/หลัง):</label>
+        <input type="number" id="num-z" value="0" step="0.1" style="width: 70px;">
+        <input type="range" id="slider-z" min="-50" max="50" step="0.1" value="0" style="width: 120px;">
+        
+        <p style="font-size: 12px; color: #aaa;">เลื่อนสไลด์หรือพิมพ์ตัวเลขเพื่อปรับตำแหน่ง/ขนาด</p>
+    </div>
+
+
+
+
+
+
+    <!-- ==========================================
+         ส่วนของป้าย Annotation 
+         ========================================== -->
+
+
+    <!-- 
+    ========================================================================
+    💡 วิธีเพิ่มป้าย Annotation ใหม่ (ฝั่ง HTML)
+    ========================================================================
+    1. ให้ Copy โครงสร้าง HTML ด้านล่างนี้ ไปวางต่อท้ายป้ายล่าสุด
+    2. เปลี่ยน id="anno-..." เป็นลำดับต่อไป หรือชื่อที่ไม่ซ้ำกัน (เช่น anno-3)
+    3. เปลี่ยนข้อความด้านใน <div class="anno-box"> เป็นคำที่คุณต้องการ
+    
+    [ตัวอย่างโค้ดสำหรับป้ายใหม่]
+    <div id="anno-3" class="annotation-marker">
+      <div class="anno-container">
+        <div class="anno-box">🌟 ข้อความของป้ายใหม่</div>
+        <div class="anno-line"></div>
+        <div class="anno-dot"></div>
+      </div>
+    </div>
+    ========================================================================
+    -->
+
+
+    
+    <!-- ป้ายที่ 1: เก้าอี้ -->
+    <div id="anno-1" class="annotation-marker">
+      <div class="anno-container">
+        <div class="anno-box">โต๊ะวงกลม</div>
+        <div class="anno-line"></div>
+        <div class="anno-dot"></div>
+      </div>
+    </div>
+
+    <!-- ป้ายที่ 2: เตรียมไว้ให้เผื่อคุณหาพิกัดจุดอื่นเจอ -->
+    <div id="anno-2" class="annotation-marker">
+      <div class="anno-container">
+        <div class="anno-box">ทีวี</div>
+        <div class="anno-line"></div>
+        <div class="anno-dot"></div>
+      </div>
+    </div>
+
+    <!-- ป้ายที่ 3: เตรียมไว้ให้เผื่อคุณหาพิกัดจุดอื่นเจอ -->
+    <div id="anno-3" class="annotation-marker">
+      <div class="anno-container">
+        <div class="anno-box">โต๊ะประชุม</div>
+        <div class="anno-line"></div>
+        <div class="anno-dot"></div>
+      </div>
+    </div>
+
+    <!-- Script หลัก -->
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
