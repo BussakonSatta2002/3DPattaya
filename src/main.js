@@ -325,7 +325,8 @@ viewer.addSplatScene('./pattaya.splat', {
         
         const deltaTime = Math.min(clock.getDelta(), 0.1); 
         
-        if (controls.isLocked) {
+        // Keep keyboard movement available when Pointer Lock is unsupported.
+        if (isFirstPersonMode) {
             const isSprinting = keyStates['ShiftLeft'] || keyStates['ShiftRight'];
             
             let baseSpeed = 23;
