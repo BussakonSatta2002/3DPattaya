@@ -6,6 +6,12 @@
 
 An interactive web viewer for testing the publication of Pattaya 3D data using **Gaussian Splatting**. The application combines a Gaussian Splat scene, a collision mesh, navigation controls, and 3D annotations, and is automatically deployed to GitHub Pages.
 
+## Preview
+
+[![Pattaya 3D Map interactive viewer](./pattaya-3d-preview.png)](https://bussakonsatta2002.github.io/3DPattaya/)
+
+Click the screenshot to open the interactive 3D viewer.
+
 ## Project overview
 
 This project demonstrates how large 3D assets can be published on the web without storing them directly in the GitHub Pages artifact. The source code is kept in this repository, while the large Gaussian Splat and collision files are stored as GitHub Release assets. During deployment, GitHub Actions downloads the assets, builds the Vite application, and publishes the final site.
