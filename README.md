@@ -12,6 +12,12 @@ An interactive web viewer for testing the publication of Pattaya 3D data using *
 
 Click the screenshot to open the interactive 3D viewer.
 
+### Full-area view
+
+[![Full-area view of the Pattaya 3D scene](./pattaya-3d-full-area.png)](https://bussakonsatta2002.github.io/3DPattaya/)
+
+This top-down view shows the wider area covered by the published Gaussian Splat scene.
+
 ## Project overview
 
 This project demonstrates how large 3D assets can be published on the web without storing them directly in the GitHub Pages artifact. The source code is kept in this repository, while the large Gaussian Splat and collision files are stored as GitHub Release assets. During deployment, GitHub Actions downloads the assets, builds the Vite application, and publishes the final site.
