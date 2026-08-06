@@ -35,7 +35,15 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+      - name: Download 3D release assets
+        run: |
+          curl -L --fail --retry 3 \
+            -o public/pattaya.splat \
+            https://github.com/BussakonSatta2002/3DPattaya/releases/download/v1.0.0/pattaya.splat
 
+          curl -L --fail --retry 3 \
+            -o public/output_pattaya577.collision.glb \
+            https://github.com/BussakonSatta2002/3DPattaya/releases/download/v1.0.0/output_pattaya577.collision.glb
       - name: Build Vite application
         run: npm run build
 
